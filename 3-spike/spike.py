@@ -2,6 +2,10 @@ import json
 import base64
 
 class KMS:
+    """
+    Key Management Service simulado.
+    Gerencia as chaves de criptografia exclusivas por paciente.
+    """
     def __init__(self):
         self.keys = {}
         self.counter = 1
@@ -20,11 +24,9 @@ class KMS:
             del self.keys[patient_id]
 
 class EventStore:
-    """sumary_line
-    
-    Keyword arguments:
-    argument -- description
-    Return: return_description
+    """
+    Armazena os eventos do sistema de saúde de forma sequencial.
+    Simula um banco de dados ou append-only log para event sourcing.
     """
     def __init__(self):
         self.events = []
@@ -45,12 +47,6 @@ def mock_encrypt(data: str, key: str) -> str:
     return base64.b64encode(encrypted_bytes).decode('utf-8')
 
 def mock_decrypt(encrypted_data: str, key: str) -> str:
-    """sumary_line
-    
-    Keyword arguments:
-    argument -- description
-    Return: return_description
-    """
     if not key:
         raise ValueError("Chave invalida")
     encrypted_bytes = base64.b64decode(encrypted_data.encode('utf-8'))
@@ -61,11 +57,10 @@ def mock_decrypt(encrypted_data: str, key: str) -> str:
     return decrypted_bytes.decode('utf-8')
 
 class HealthSystem:
-    """sumary_line
-    
-    Keyword arguments:
-    argument -- description
-    Return: return_description
+    """
+    Sistema central de saúde que gerencia eventos de pacientes.
+    Integra-se com o KMS para criptografia de dados sensíveis visando 
+    conformidade com a LGPD (Crypto-Shredding) e com o EventStore para persistência.
     """
     def __init__(self, kms: KMS, event_store: EventStore):
         self.kms = kms
@@ -73,12 +68,6 @@ class HealthSystem:
         self.event_counter = 1
 
     def register_patient_event(self, patient_id: str, event_type: str, public_data: dict, sensitive_data: dict):
-        """sumary_line
-        
-        Keyword arguments:
-        argument -- description
-        Return: return_description
-        """
         key = self.kms.get_key(patient_id)
         if not key:
             key = self.kms.generate_key_for_patient(patient_id)
@@ -97,12 +86,6 @@ class HealthSystem:
         self.event_store.append_event(event)
 
     def read_patient_events(self, patient_id: str):
-        """sumary_line
-        
-        Keyword arguments:
-        argument -- description
-        Return: return_description
-        """
         key = self.kms.get_key(patient_id)
         patient_events = [e for e in self.event_store.get_all_events() if e["patient_id"] == patient_id]
         
@@ -121,12 +104,6 @@ class HealthSystem:
         return results
 
 def run_spike():
-    """sumary_line
-    
-    Keyword arguments:
-    argument -- description
-    Return: return_description
-    """
     kms = KMS()
     store = EventStore()
     sys = HealthSystem(kms, store)
